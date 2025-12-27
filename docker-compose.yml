@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: customer-fee-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: customer_fee_db
+    ports:
+      - "25432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: customer-fee-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "22181:2181"
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: customer-fee-kafka
+    depends_on:
+      - zookeeper # make sure Zookeeper starts before Kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Listener configuration for both internal (Docker) and external (Host/Tailnet) access
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # Topic auto-creation
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # set to 1 for single broker
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      # Log retention
+      KAFKA_LOG_RETENTION_HOURS: 168 # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824 # 1 GB
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000 # check remove old logs every 5 minutes
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    # Kafka UI - helpful for debugging and monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: customer-fee-kafka-ui
+    depends_on:
+      - kafka # ensure Kafka starts before Kafka UI
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: customer-fee-redis
+    ports:
+      - "26379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis commander for managing Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: customer-fee-redis-commander
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    environment:
+        REDIS_HOSTS: local:customer-fee-redis:6379
+    networks:
+      - customer-fee-network
+    restart: unless-stopped
+
+networks:
+  customer-fee-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kafka_data:
+  redis_data:

@@ -4,6 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+.CLAUDE/
 
 ### STS ###
 .apt_generated
@@ -43,3 +44,6 @@ out/
 
 application-local.properties
 application-dev.properties
+
+
+.DS_Store
