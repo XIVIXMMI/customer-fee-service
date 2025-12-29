@@ -15,4 +15,6 @@ public interface CustomerFeeJobRepository extends JpaRepository<CustomerFeeJob, 
     List<CustomerFeeJob> findByCustomerIdAndBillingMonth(Long customerId, String billingMonth);
     List<CustomerFeeJob> findByCustomerId(Long customerId);
     boolean existsByIdempotencyKey(String idempotencyKey);
+    List<CustomerFeeJob> findByBillingMonth(String billingMonth);
+
 }

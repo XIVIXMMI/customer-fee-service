@@ -1,9 +1,11 @@
 package com.hdbank.customer_fee_service.controller;
 
 import com.hdbank.customer_fee_service.dto.request.CreateFeeConfigRequest;
+import com.hdbank.customer_fee_service.dto.request.FeePreviewRequest;
 import com.hdbank.customer_fee_service.dto.request.UpdateFeeConfigRequest;
 import com.hdbank.customer_fee_service.dto.response.ApiResponse;
 import com.hdbank.customer_fee_service.dto.response.FeeConfigResponse;
+import com.hdbank.customer_fee_service.dto.response.FeePreviewResponse;
 import com.hdbank.customer_fee_service.service.FeeConfigService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -84,5 +86,15 @@ public class CustomerFeeConfigController {
         feeConfigService.deleteFeeConfig(id);
         return ResponseEntity
                 .ok(ApiResponse.success(null, "Fee config deleted successfully"));
+    }
+
+    @PostMapping("/preview")
+    public ResponseEntity<ApiResponse<FeePreviewResponse>> previewFee(
+            @Valid @RequestBody FeePreviewRequest request) {
+        log.info("POST /api/v1/fee-configs/preview - Previewing fee");
+
+        FeePreviewResponse response = feeConfigService.feeReview(request);
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

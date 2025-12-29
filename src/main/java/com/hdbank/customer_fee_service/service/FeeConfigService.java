@@ -1,8 +1,10 @@
 package com.hdbank.customer_fee_service.service;
 
 import com.hdbank.customer_fee_service.dto.request.CreateFeeConfigRequest;
+import com.hdbank.customer_fee_service.dto.request.FeePreviewRequest;
 import com.hdbank.customer_fee_service.dto.request.UpdateFeeConfigRequest;
 import com.hdbank.customer_fee_service.dto.response.FeeConfigResponse;
+import com.hdbank.customer_fee_service.dto.response.FeePreviewResponse;
 import com.hdbank.customer_fee_service.entity.Customer;
 import com.hdbank.customer_fee_service.entity.CustomerFeeConfig;
 import com.hdbank.customer_fee_service.entity.FeeType;
@@ -11,11 +13,15 @@ import com.hdbank.customer_fee_service.exception.ValidationException;
 import com.hdbank.customer_fee_service.repository.CustomerFeeConfigRepository;
 import com.hdbank.customer_fee_service.repository.CustomerRepository;
 import com.hdbank.customer_fee_service.repository.FeeTypeRepository;
+import com.hdbank.customer_fee_service.service.strategy.FeeCalculationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -30,6 +36,7 @@ public class FeeConfigService {
     private final CustomerFeeConfigRepository customerFeeConfigRepository;
     private final CustomerRepository customerRepository;
     private final FeeTypeRepository feeTypeRepository;
+    private final FeeCalculationContext feeCalculationContext;
 
     @Transactional
     public FeeConfigResponse createFeeConfig(CreateFeeConfigRequest request) {
@@ -67,6 +74,7 @@ public class FeeConfigService {
         return FeeConfigResponse.from(saved);
     }
 
+    @Cacheable(value = "feeConfigs", key = "#configId")
     public FeeConfigResponse getFeeConfigById(Long configId) {
         log.info("Getting fee config with id: {}", configId);
         CustomerFeeConfig config = customerFeeConfigRepository.findById(configId)
@@ -75,6 +83,7 @@ public class FeeConfigService {
         return FeeConfigResponse.from(config);
     }
 
+    @Cacheable(value = "feeConfigs", key = "'customerId: ' + #customerId + ':active'")
     public FeeConfigResponse getActiveFeeConfigByCustomerId(Long customerId){
         log.info("Getting active fee config for customer id: {}", customerId);
         customerRepository.findById(customerId)
@@ -86,6 +95,7 @@ public class FeeConfigService {
         return FeeConfigResponse.from(config);
     }
 
+    @Cacheable(value = "feeConfigs", key = "'customerId: ' + #customerId + ':all'")
     public List<FeeConfigResponse> getAllFeeConfigsByCustomerIdIncludeExpired(Long customerId) {
         log.info("Getting all fee configs for customer id: {} including expired", customerId);
         customerRepository.findById(customerId)
@@ -101,6 +111,7 @@ public class FeeConfigService {
     }
 
     @Transactional
+    @CacheEvict(value = "feeConfigs", key = "#id")
     public FeeConfigResponse updateFeeConfig(Long id, UpdateFeeConfigRequest request){
         log.info("Updating fee config with id: {} ", id);
 
@@ -139,6 +150,7 @@ public class FeeConfigService {
     }
 
     @Transactional
+    @CacheEvict(value = "feeConfigs", key = "#id")
     public void deleteFeeConfig(Long id) {
         log.info("Deleting fee config with id: {}", id);
 
@@ -151,6 +163,42 @@ public class FeeConfigService {
 
         customerFeeConfigRepository.save(config);
         log.info("Deleted fee config with id: {}", id);
+    }
+
+    public FeePreviewResponse feeReview(FeePreviewRequest request){
+        log.info("Previewing fee for customer with id: {}",request.getCustomerId());
+        LocalDate today = LocalDate.now();
+        CustomerFeeConfig config = customerFeeConfigRepository
+                .findActiveConfigByCustomerIdAndDate(request.getCustomerId(), today)
+                .orElseThrow(
+                        () -> new EntityNotFoundException("No active config found with id: " + request.getCustomerId())
+                );
+
+        FeeType feeType = feeTypeRepository
+                .findById(config.getFeeTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("Fee type not found"));
+
+        // merge params: use request param if provide or otherwise use use config params
+        Map<String, Object> calculationParams = request.getCalculationParams() != null
+                ? request.getCalculationParams()
+                : config.getCalculationParams();
+
+        BigDecimal calculationFee = feeCalculationContext.calculateFee(
+                feeType.getCalculationType(),
+                config.getMonthlyFeeAmount(),
+                calculationParams
+        );
+
+        return FeePreviewResponse.builder()
+                .customerId(request.getCustomerId())
+                .feeTypeCode(feeType.getCode())
+                .feeTypeName(feeType.getName())
+                .calculationType(feeType.getCalculationType())
+                .monthlyFeeAmount(config.getMonthlyFeeAmount())
+                .calculatedFee(calculationFee)
+                .currency(config.getCurrency())
+                .calculationParams(calculationParams)
+                .build();
     }
 
     /**
