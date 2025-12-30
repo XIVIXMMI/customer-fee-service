@@ -1,5 +1,7 @@
 package com.hdbank.customer_fee_service.service.strategy;
 
+import com.hdbank.customer_fee_service.entity.CalculationType;
+import com.hdbank.customer_fee_service.entity.FeeJobStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,7 @@ public class FixedMonthlyFeeStrategy implements FeeCalculationStrategy{
 
     @Override
     public String getCalculationType() {
-        return "FIXED";
+        return CalculationType.FIXED.toString();
     }
 
     @Override

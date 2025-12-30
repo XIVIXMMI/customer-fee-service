@@ -43,6 +43,9 @@ dependencies {
 
 	// Jackson for Redis serialization
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	implementation 'org.springframework.kafka:spring-kafka'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 tasks.named('test') {

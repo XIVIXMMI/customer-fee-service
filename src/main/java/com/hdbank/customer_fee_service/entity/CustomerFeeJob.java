@@ -33,8 +33,8 @@ public class CustomerFeeJob extends BaseEntity {
     @Column(name = "billing_month", nullable = false, length = 7)
     private String billingMonth;  // Format: yyyy-MM (e.g., "2025-01")
 
-    @Column(name = "amount", nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = true, precision = 15, scale = 2)
+    private BigDecimal amount;  // null khi status = NEW, có giá trị khi DONE
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

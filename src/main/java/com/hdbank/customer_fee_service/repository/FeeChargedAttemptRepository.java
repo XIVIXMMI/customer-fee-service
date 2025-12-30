@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FeeChargedAttempt extends JpaRepository<FeeChargeAttempt, Long> {
+public interface FeeChargedAttemptRepository extends JpaRepository<FeeChargeAttempt, Long> {
 
     List<FeeChargeAttempt> findByJobIdOrderByAttemptNoAsc(Long jobId);
     List<FeeChargeAttempt> findByCustomerId(Long customerId);

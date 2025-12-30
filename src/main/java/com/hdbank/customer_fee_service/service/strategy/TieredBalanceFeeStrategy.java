@@ -1,5 +1,6 @@
 package com.hdbank.customer_fee_service.service.strategy;
 
+import com.hdbank.customer_fee_service.entity.CalculationType;
 import com.hdbank.customer_fee_service.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ import java.util.Map;
  */
 @Component
 @Slf4j
-public class TieredTransactionFeeStrategy implements FeeCalculationStrategy{
+public class TieredBalanceFeeStrategy implements FeeCalculationStrategy{
 
     private static final int LESS_THAN = -1;
     private static final int EQUAL_TO = 0;
@@ -55,7 +56,7 @@ public class TieredTransactionFeeStrategy implements FeeCalculationStrategy{
 
     @Override
     public String getCalculationType() {
-        return "TIERED";
+        return CalculationType.TIERED.toString();
     }
 
     @Override

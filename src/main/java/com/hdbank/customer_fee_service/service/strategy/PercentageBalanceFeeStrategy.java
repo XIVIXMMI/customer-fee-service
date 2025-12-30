@@ -1,5 +1,6 @@
 package com.hdbank.customer_fee_service.service.strategy;
 
+import com.hdbank.customer_fee_service.entity.CalculationType;
 import com.hdbank.customer_fee_service.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ import java.util.Map;
 @Slf4j
 public class PercentageBalanceFeeStrategy implements FeeCalculationStrategy{
 
-    private static final int SCALE = 2; // Decimal places for currency
+    private static final int SCALE = 2;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     @Override
@@ -40,7 +41,7 @@ public class PercentageBalanceFeeStrategy implements FeeCalculationStrategy{
 
     @Override
     public String getCalculationType() {
-        return "PERCENTAGE";
+        return CalculationType.PERCENTAGE.toString();
     }
 
     @Override
