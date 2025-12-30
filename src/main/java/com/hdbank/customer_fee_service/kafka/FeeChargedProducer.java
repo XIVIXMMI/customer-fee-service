@@ -1,5 +1,6 @@
 package com.hdbank.customer_fee_service.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hdbank.customer_fee_service.config.KafkaConfig;
 import com.hdbank.customer_fee_service.dto.response.FeeChargeResult;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,8 @@ import java.util.UUID;
 @Slf4j
 public class FeeChargedProducer {
 
-    private final KafkaTemplate<String, FeeChargedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public void publishFeeChargedEvent(FeeChargeResult result) {
         try {
@@ -34,11 +36,14 @@ public class FeeChargedProducer {
             log.info("Publishing FeeChargedEvent for customer: {}, amount: {}",
                     result.getCustomerId(), result.getChargedAmount());
 
+            // Serialize event to JSON string
+            String eventJson = objectMapper.writeValueAsString(event);
+
             kafkaTemplate.send(KafkaConfig.TOPIC_FEE_CHARGED,
                     result.getCustomerId().toString(),
-                    event);
+                    eventJson);
 
-            log.info("FeeChargedEvent published successfully");
+            log.info("FeeChargedEvent published successfully to topic: {}", KafkaConfig.TOPIC_FEE_CHARGED);
 
         } catch (Exception e) {
             log.error("Error publishing FeeChargedEvent", e);

@@ -136,7 +136,8 @@ public class FeeConfigService {
             config.setCalculationParams(request.getCalculationParams());
         }
 
-        if(config.getEffectiveTo() != null && config.getEffectiveFrom().isAfter(request.getEffectiveTo())){
+        // Validate dates after all updates applied
+        if(config.getEffectiveTo() != null && config.getEffectiveFrom().isAfter(config.getEffectiveTo())){
             throw new ValidationException("Effective from date must be before effective to date");
         }
         checkOverlappingConfigs(

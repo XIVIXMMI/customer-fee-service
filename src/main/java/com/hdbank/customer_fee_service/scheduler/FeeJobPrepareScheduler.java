@@ -3,6 +3,7 @@ package com.hdbank.customer_fee_service.scheduler;
 import com.hdbank.customer_fee_service.entity.Customer;
 import com.hdbank.customer_fee_service.entity.CustomerFeeJob;
 import com.hdbank.customer_fee_service.entity.FeeJobStatus;
+import com.hdbank.customer_fee_service.repository.CustomerFeeConfigRepository;
 import com.hdbank.customer_fee_service.repository.CustomerFeeJobRepository;
 import com.hdbank.customer_fee_service.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class FeeJobPrepareScheduler {
 
     private final CustomerRepository customerRepository;
     private final CustomerFeeJobRepository feeJobRepository;
+    private final CustomerFeeConfigRepository feeConfigRepository;
     private final DistributedLockService lockService;
 
     private static final String LOCK_KEY = "FEE_JOB_PREPARE_SCHEDULER";
@@ -65,6 +67,19 @@ public class FeeJobPrepareScheduler {
                 if (exists) {
                     log.debug("Job already exists for customer {} in month {}",
                             customer.getId(), billingMonth);
+                    skipped++;
+                    continue;
+                }
+
+                // Check if customer has active fee config
+                LocalDate today = LocalDate.now();
+                boolean hasActiveFeeConfig = feeConfigRepository
+                        .findActiveConfigByCustomerIdAndDate(customer.getId(), today)
+                        .isPresent();
+
+                if (!hasActiveFeeConfig) {
+                    log.debug("Customer {} has no active fee config, skipping job creation",
+                            customer.getId());
                     skipped++;
                     continue;
                 }
