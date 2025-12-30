@@ -22,7 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
+public class ApiDataResponse<T> {
 
     /**
      * "00": SUCCESS
@@ -73,45 +73,45 @@ public class ApiResponse<T> {
         private Object rejectedValue;
     }
 
-    public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> success(T data) {
+        return ApiDataResponse.<T>builder()
                 .responseCode("00")
                 .responseMessage("SUCCESS")
                 .data(data)
                 .build();
     }
 
-    public static <T> ApiResponse<T> success(T data, String message) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> success(T data, String message) {
+        return ApiDataResponse.<T>builder()
                 .responseCode("00")
                 .responseMessage(message)
                 .data(data)
                 .build();
     }
 
-    public static <T> ApiResponse<T> error(String code, String message) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> error(String code, String message) {
+        return ApiDataResponse.<T>builder()
                 .responseCode(code)
                 .responseMessage(message)
                 .build();
     }
 
-    public static <T> ApiResponse<T> validationError(List<ErrorDetail> errors) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> validationError(List<ErrorDetail> errors) {
+        return ApiDataResponse.<T>builder()
                 .responseCode("01")
                 .errors(errors)
                 .build();
     }
 
-    public static <T> ApiResponse<T> entityNotFound(String message) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> entityNotFound(String message) {
+        return ApiDataResponse.<T>builder()
                 .responseCode("02")
                 .responseMessage(message)
                 .build();
     }
 
-    public static <T> ApiResponse<T> internalServerError(String message) {
-        return ApiResponse.<T>builder()
+    public static <T> ApiDataResponse<T> internalServerError(String message) {
+        return ApiDataResponse.<T>builder()
                 .responseCode("99")
                 .responseMessage(message)
                 .build();
