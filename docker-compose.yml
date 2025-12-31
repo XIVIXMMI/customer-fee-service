@@ -16,36 +16,32 @@ services:
       - customer-fee-network
     restart: unless-stopped
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: customer-fee-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "22181:2181"
-    networks:
-      - customer-fee-network
-    restart: unless-stopped
-
+  # KAFKA WITH KRAFT MODE (NO ZOOKEEPER NEEDED)
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: customer-fee-kafka
-    depends_on:
-      - zookeeper # make sure Zookeeper starts before Kafka
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KRaft settings
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
 
       # Listener configuration for both internal (Docker) and external (Host/Tailnet) access
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # Cluster ID (generate a new one with: kafka-storage random-uuid)
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+      # Storage
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
 
       # Topic auto-creation
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # set to 1 for single broker
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
@@ -56,7 +52,7 @@ services:
     ports:
       - "9092:9092"
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka_kraft_data:/var/lib/kafka/data
     networks:
       - customer-fee-network
     restart: unless-stopped
@@ -66,7 +62,7 @@ services:
       timeout: 10s
       retries: 5
 
-    # Kafka UI - helpful for debugging and monitoring
+  # Kafka UI - helpful for debugging and monitoring
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: customer-fee-kafka-ui
@@ -77,7 +73,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      # No Zookeeper configuration needed in KRaft mode
     networks:
       - customer-fee-network
     restart: unless-stopped
@@ -119,5 +115,5 @@ networks:
 
 volumes:
   postgres_data:
-  kafka_data:
+  kafka_kraft_data:
   redis_data:

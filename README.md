@@ -28,13 +28,13 @@ This service handles:
 - Idempotent job processing across multiple instances
 
 **Key Features:**
-- ✅ RESTful API with standardized response format
-- ✅ Strategy Pattern for flexible fee calculation
-- ✅ Distributed scheduler with PostgreSQL advisory locks
-- ✅ Kafka event publishing for fee charged events
-- ✅ Redis caching for frequently accessed data
-- ✅ Global exception handling with detailed error codes
-- ✅ Bean validation for all request DTOs
+-  RESTful API with standardized response format
+-  Strategy Pattern for flexible fee calculation
+-  Distributed scheduler with PostgreSQL advisory locks
+-  Kafka event publishing for fee charged events
+-  Redis caching for frequently accessed data
+-  Global exception handling with detailed error codes
+-  Bean validation for all request DTOs
 
 ---
 
@@ -84,7 +84,7 @@ cd customer-fee-service
 
 ### 2. Start Infrastructure Services
 
-Use Docker Compose to start PostgreSQL, Redis, Kafka, and Zookeeper:
+Use Docker Compose to start PostgreSQL, Redis, and Kafka (KRaft mode - no Zookeeper needed):
 
 ```bash
 docker-compose up -d
@@ -93,10 +93,8 @@ docker-compose up -d
 **Services Started:**
 - PostgreSQL: `localhost:25432` (mapped from container 5432)
 - Redis: `localhost:26379` (mapped from container 6379)
-- Kafka: `localhost:9092`
-- Zookeeper: `localhost:22181` (mapped from container 2181)
+- Kafka: `localhost:9092` (KRaft mode - Zookeeper-less)
 - Kafka UI: `localhost:8090` (for monitoring topics)
-- Redis Commander: `localhost:8081` (for Redis GUI)
 
 **Verify services are running:**
 
@@ -520,11 +518,11 @@ docker-compose restart postgres
 #### 3. Kafka connection timeout
 
 ```bash
-# Check Kafka and Zookeeper are running
-docker-compose ps kafka zookeeper
+# Check Kafka is running (KRaft mode)
+docker-compose ps kafka
 
-# Restart Kafka services
-docker-compose restart kafka zookeeper
+# Restart Kafka
+docker-compose restart kafka
 ```
 
 #### 4. Redis connection refused
