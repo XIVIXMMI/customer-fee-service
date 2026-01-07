@@ -25,27 +25,7 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("""
                                 REST API for Customer Fee Service\s
-                               \s
-                                ##FEATURES
-                                - Customer Management\s
-                                - Fee Type Management
-                                - Fee Preview & Calculation\s
-                                - Automated Fee Charging (Scheduler)
-                                - Distributed Cache (Redis)
-                                - Event-Driven Architecture (Kafka)
-                               \s
-                                ##BUSSINESS LOGIC
-                                - Support 3 fee calculation strategies:
-                                    - Fixed Monthly Fee
-                                    - Tiered Balance Fee
-                                    - Percentage of Balance Fee
-                                - Monthly automated fee charging
-                                - Distributed lock for scheduler coordination
                                \s""")
-                        .contact(new Contact()
-                                .name("HDBank Development Team"))
-                        .license(new License()
-                                .name("Internal use only"))
                 )
                 .servers(List.of(
                         new Server()

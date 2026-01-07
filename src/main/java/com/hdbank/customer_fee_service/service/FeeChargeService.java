@@ -94,11 +94,26 @@ public class FeeChargeService {
             log.info("Deducting {} {} from customer {}",
                     calculatedFee, config.getCurrency(), customer.getId());
 
+            // Get current attempt number (count previous attempts + 1)
+            int attemptNumber = getNextAttemptNumber(jobId);
+
+            // Create SUCCESS audit log
+            FeeChargeAttempt successAttempt = FeeChargeAttempt.builder()
+                    .jobId(jobId)
+                    .customerId(customer.getId())
+                    .billingMonth(job.getBillingMonth())
+                    .amount(calculatedFee)
+                    .attemptNo(attemptNumber)
+                    .status(AttemptStatus.SUCCESS)
+                    .createdBy(0L) // System user
+                    .build();
+            feeChargedAttemptRepository.save(successAttempt);
+
             job.setStatus(FeeJobStatus.DONE);
             job.setAmount(calculatedFee);
             feeJobRepository.save(job);
 
-            log.info("Fee charged successfully for job: {}", jobId);
+            log.info("Fee charged successfully for job: {} (attempt: {})", jobId, attemptNumber);
 
             return FeeChargeResult.builder()
                     .jobId(jobId)
@@ -114,6 +129,23 @@ public class FeeChargeService {
         } catch (Exception e) {
             log.error("Error charging fee for job: {}", jobId, e);
 
+            // Get current attempt number
+            int attemptNumber = getNextAttemptNumber(jobId);
+
+            // Create FAILED audit log
+            FeeChargeAttempt failedAttempt = FeeChargeAttempt.builder()
+                    .jobId(jobId)
+                    .customerId(job.getCustomerId())
+                    .billingMonth(job.getBillingMonth())
+                    .amount(BigDecimal.ZERO) // No amount charged on failure
+                    .attemptNo(attemptNumber)
+                    .status(AttemptStatus.FAILED)
+                    .errorCode(e.getClass().getSimpleName())
+                    .errorMessage(e.getMessage())
+                    .createdBy(0L) // System user
+                    .build();
+            feeChargedAttemptRepository.save(failedAttempt);
+
             job.setStatus(FeeJobStatus.FAILED);
             // TODO: Entity has no errorMessage field, could add to migration later if needed
             feeJobRepository.save(job);
@@ -127,5 +159,12 @@ public class FeeChargeService {
                     .chargedAt(Instant.now())
                     .build();
         }
+    }
+
+    /**
+     * Get next attempt number for this job
+     */
+    private int getNextAttemptNumber(Long jobId) {
+        return feeChargedAttemptRepository.findByJobIdOrderByAttemptNoAsc(jobId).size() + 1;
     }
 }

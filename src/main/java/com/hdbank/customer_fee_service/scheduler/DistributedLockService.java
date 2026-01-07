@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * Distributed lock using Posgresql advisory locks
+ * Distributed lock using PosgreSQL advisory locks
  */
 @Service
 @RequiredArgsConstructor
@@ -16,7 +16,7 @@ public class DistributedLockService {
     private final JdbcTemplate jdbcTemplate;
 
     /**
-     * Try to acquired lock
+     * Try to acquire lock
      * @param lockKey unique identifier for the lock (use hashCode instead of job name)
      * @return true if lock acquired, false otherwise
      */
@@ -30,10 +30,10 @@ public class DistributedLockService {
                     lockId
             );
             if(Boolean.TRUE.equals(result)){
-                log.info("Lock acquired for key: {} (id: {}",lockKey, lockId);
+                log.info("Lock acquired for key: {} (id: {})",lockKey, lockId);
                 return true;
             } else {
-                log.info("Lock already held for key: {} (id: {}",lockKey,lockId);
+                log.info("Lock already held for key: {} (id: {})",lockKey,lockId);
                 return false;
             }
         } catch (Exception e) {

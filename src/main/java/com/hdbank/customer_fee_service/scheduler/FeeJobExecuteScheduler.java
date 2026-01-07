@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Scheduler to execute pending fee jobs
- * Runs every hour to process jobs with status = NEW
+ * Runs every 5 minutes to process jobs with status = NEW
  */
 @Component
 @RequiredArgsConstructor
@@ -32,9 +32,9 @@ public class FeeJobExecuteScheduler {
     private static final int BATCH_SIZE = 100;  // Process 100 jobs per run
 
     /**
-     * Runs every hour at minute 0
+     * Runs every 5 minutes
      */
-    @Scheduled(cron = "0 0 * * * ?")  // Every hour at :00
+    @Scheduled(cron = "0 */5 * * * ?")  // Every 5 minutes
     public void executeNewFeeJobs() {
         log.info("Starting FeeJobExecuteScheduler...");
 
@@ -44,11 +44,11 @@ public class FeeJobExecuteScheduler {
     /**
      * For testing - runs every 2 minutes
      */
-    @Scheduled(cron = "0 */1 * * * ?")  // Every 2 minutes
-    public void executeNewFeeJobsTest() {
-        log.info("Starting FeeJobExecuteScheduler (TEST MODE)...");
-        lockService.executeWithLock(LOCK_KEY + "_TEST", this::executeJobs);
-    }
+//    @Scheduled(cron = "0 */1 * * * ?")  // Every 2 minutes
+//    public void executeNewFeeJobsTest() {
+//        log.info("Starting FeeJobExecuteScheduler (TEST MODE)...");
+//        lockService.executeWithLock(LOCK_KEY + "_TEST", this::executeJobs);
+//    }
 
     private void executeJobs() {
         // Get NEW jobs (limit batch size to avoid overload)

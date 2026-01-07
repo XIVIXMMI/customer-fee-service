@@ -13,4 +13,6 @@ public interface FeeChargedAttemptRepository extends JpaRepository<FeeChargeAtte
     List<FeeChargeAttempt> findByCustomerId(Long customerId);
     List<FeeChargeAttempt> findByStatus(String status);
     List<FeeChargeAttempt> findByStatusOrderByCreatedAtDesc(String status);
+    List<FeeChargeAttempt> findByBillingMonthAndStatusOrderByCreatedAtDesc(String billingMonth, String status);
+    List<FeeChargeAttempt> findByBillingMonth(String billingMonth);
 }

@@ -56,7 +56,7 @@ public class CustomerFeeConfig extends BaseEntity {
      * - PERCENTAGE: {"rate": 0.001, "min_fee": 10000, "max_fee": 100000}
      */
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "calculation_params", columnDefinition = "jsonb")
+    @Column(name = "calculation_params")
     private Map<String, Object> calculationParams;
 
     @Column(name = "deleted_at")

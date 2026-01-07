@@ -41,11 +41,11 @@ public class FeeJobPrepareScheduler {
     /**
      * For testing - runs every 2 minutes
      */
-    @Scheduled(cron = "0 */2 * * * ?")
-    public void prepareMonthlyFeeJobsTest() {
-        log.info("Starting FeeJobPrepareScheduler (TEST MODE)...");
-        lockService.executeWithLock(LOCK_KEY + "_TEST", this::executePrepareJobs);
-    }
+//    @Scheduled(cron = "0 */2 * * * ?")
+//    public void prepareMonthlyFeeJobsTest() {
+//        log.info("Starting FeeJobPrepareScheduler (TEST MODE)...");
+//        lockService.executeWithLock(LOCK_KEY + "_TEST", this::executePrepareJobs);
+//    }
 
     private void executePrepareJobs() {
         String billingMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));

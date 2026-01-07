@@ -39,6 +39,7 @@ public class FeeConfigService {
     private final FeeCalculationContext feeCalculationContext;
 
     @Transactional
+    @CacheEvict(value = "feeConfigs", allEntries = true)
     public FeeConfigResponse createFeeConfig(CreateFeeConfigRequest request) {
         log.info("Creating fee config for customerId: {}", request.getCustomerId());
 
@@ -111,7 +112,7 @@ public class FeeConfigService {
     }
 
     @Transactional
-    @CacheEvict(value = "feeConfigs", key = "#id")
+    @CacheEvict(value = "feeConfigs", allEntries = true)
     public FeeConfigResponse updateFeeConfig(Long id, UpdateFeeConfigRequest request){
         log.info("Updating fee config with id: {} ", id);
 
@@ -151,7 +152,7 @@ public class FeeConfigService {
     }
 
     @Transactional
-    @CacheEvict(value = "feeConfigs", key = "#id")
+    @CacheEvict(value = "feeConfigs", allEntries = true)
     public void deleteFeeConfig(Long id) {
         log.info("Deleting fee config with id: {}", id);
 
